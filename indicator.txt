@@ -1,0 +1,6 @@
+Indicates calm, stable weather with no precipitation.
+A clear night sky suggests stable weather; clouds at night might indicate warming temperatures (due to trapped heat) or possible precipitation depending on cloud density.
+Fair weather if small and white; possible thunderstorms if they grow larger and darker.
+Overcast skies with potential for light rain, drizzle, or mist.
+Expect consistent rain or storms, depending on the cloud type and intensity.
+Typically signal fair weather, but a large increase in cirrus clouds may indicate an approaching warm front or storm system.
