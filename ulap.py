@@ -5,6 +5,17 @@ from PIL import UnidentifiedImageError
 from teachable_machine import TeachableMachine
 import cv2 as cv
 
+import sys
+import os
+
+def resource_path(relative_path):
+    """ Get absolute path to resource, works for dev and for PyInstaller """
+    try:
+        base_path = sys._MEIPASS  # PyInstaller temp folder
+    except AttributeError:
+        base_path = os.path.abspath(".")
+
+    return os.path.join(base_path, relative_path)
 
 # Function to load class names, descriptions, and indications from text files
 def load_class_names(file_path):
@@ -21,14 +32,14 @@ def load_weather_indications(file_path):
 
 # Initialize the model
 model = TeachableMachine(
-    model_path="keras_model.h5",
-    labels_file_path="labels.txt"
+    model_path=resource_path("keras_model.h5"),
+    labels_file_path=resource_path("labels.txt")
 )
 
 # Load data from files
-class_names = load_class_names("labels.txt")
-descriptions = load_descriptions("description.txt")
-indications = load_weather_indications("indicator.txt")
+class_names = load_class_names(resource_path("labels.txt"))
+descriptions = load_descriptions(resource_path("description.txt"))
+indications = load_weather_indications(resource_path("indicator.txt"))
 
 # Function to classify an image
 def classify_image(file_path):
