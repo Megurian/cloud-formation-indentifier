@@ -114,8 +114,15 @@ def upload_and_classify():
 
 # Function to start live camera feed
 def start_camera_feed():
+    global cap
+    cap = cv.VideoCapture(0)
+    if not cap.isOpened():
+        result_label.config(text="Error: Camera could not be opened.")
+        return
+
     live_feed_label.configure(width=250, height=250)
     set_image_empty()
+
     def update_feed():
         ret, frame = cap.read()
         if ret:
@@ -125,9 +132,7 @@ def start_camera_feed():
             live_feed_label.imgtk = imgtk
             live_feed_label.configure(image=imgtk)
             live_feed_label.after(10, update_feed)
-
-    global cap
-    cap = cv.VideoCapture(0)
+    
     update_feed()
 
 # Function to capture an image from the camera
@@ -147,7 +152,8 @@ def capture_from_camera():
         result_label.config(text="Camera is not open.")
 
 def remove_live_feed():
-    cap.release()
+    if 'cap' in globals() and cap.isOpened():
+        cap.release()
     live_feed_label.configure(image="", width=0, height=0)
     live_feed_label.imgtk = None
 
