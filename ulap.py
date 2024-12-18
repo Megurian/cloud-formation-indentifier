@@ -17,6 +17,20 @@ def resource_path(relative_path):
 
     return os.path.join(base_path, relative_path)
 
+
+""" Logging Functionality Start Here """
+
+import logging
+
+logging.basicConfig(filename="debug_log.txt", level=logging.DEBUG)
+logging.debug("Application started")
+
+# Log file paths
+logging.debug(f"Model path: {resource_path('keras_model.h5')}")
+logging.debug(f"Labels path: {resource_path('labels.txt')}")
+
+""" Logging Functionality End Here """
+
 # Function to load class names, descriptions, and indications from text files
 def load_class_names(file_path):
     with open(file_path, 'r') as file:
