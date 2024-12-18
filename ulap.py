@@ -1,6 +1,7 @@
 import tkinter as tk
 from tkinter import Label, Button, filedialog, Frame
 from PIL import Image, ImageTk
+from PIL import UnidentifiedImageError
 from teachable_machine import TeachableMachine
 import cv2 as cv
 
@@ -34,29 +35,59 @@ def classify_image(file_path):
     img = cv.imread(file_path)
     if img is None:
         clear_results()
-        result_label.config(text="Error: Could not load image.")
+        result_label.config(text=f"Error: Could not load image from path: {file_path}")
         return
 
     # Resize image for display
-    pil_image = Image.open(file_path).resize((250, 250))
-    tk_image = ImageTk.PhotoImage(pil_image)
-    image_label.config(image=tk_image)
-    image_label.image = tk_image
+    try:
+        pil_image = Image.open(file_path).resize((250, 250))
+        tk_image = ImageTk.PhotoImage(pil_image)
+        image_label.config(image=tk_image)
+        image_label.image = tk_image  # Keep a reference to avoid garbage collection
+    except UnidentifiedImageError:
+        result_label.config(text="Error: Unsupported or corrupted image file.")
+        return
+    except Exception as e:
+        result_label.config(text=f"Error: {str(e)}")
+        return
 
     # Classify the image
-    result = model.classify_image(file_path)
-    class_index = result["class_index"]
-    class_name = result["class_name"]
-    class_confidence = result["class_confidence"]
+    try:
+        result = model.classify_image(file_path)
+        class_index = result["class_index"]
+        class_name = result["class_name"]
+        class_confidence = result["class_confidence"]
+        predictions = result["predictions"]
+    except Exception as e:
+        result_label.config(text=f"Error during classification: {str(e)}")
+        return
+
+    # Validate predictions and class names
+    if not predictions or len(predictions) != len(class_names):
+        result_label.config(text="Error: Invalid predictions or class names.")
+        return
 
     # Display results
     if class_confidence >= 0.80:
+        if class_index not in descriptions or class_index not in indications:
+            result_label.config(text="Error: Missing description or indication for the predicted class.")
+            return
         result_label.config(text=f"AI Prediction: {class_name}\nConfidence: {class_confidence * 100:.2f}%")
         description_label.config(text=f"\u2022 Description:\n{descriptions[class_index]}", font=("Arial", 12, "bold"))
         indicator_label.config(text=f"\u2022 Weather Indication:\n{indications[class_index]}", font=("Arial", 12, "bold"))
     else:
-        clear_results()
-        result_label.config(text="Prediction confidence is too low.\n\nTry uploading/capturing different picture")
+        max_confidence = max(predictions)
+        if max_confidence >= 0.50:
+            max_class_name = class_names[predictions.index(max_confidence)]
+            if max_class_name not in descriptions or max_class_name not in indications:
+                result_label.config(text="Error: Missing description or indication for the predicted class.")
+                return
+            result_label.config(text=f"AI Prediction: {max_class_name}\nConfidence: {max_confidence * 100:.2f}%")
+            description_label.config(text=f"\u2022 Description:\n{descriptions[max_class_name]}", font=("Arial", 12, "bold"))
+            indicator_label.config(text=f"\u2022 Weather Indication:\n{indications[max_class_name]}", font=("Arial", 12, "bold"))
+        else:
+            clear_results()
+            result_label.config(text="Prediction confidence is too low.\n\nTry uploading/capturing different picture")
 
 # Function to upload an image and classify it
 def upload_and_classify():
