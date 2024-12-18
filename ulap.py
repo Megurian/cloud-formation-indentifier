@@ -87,16 +87,8 @@ def classify_image(file_path):
         result_label.config(text=f"Error during classification: {str(e)}")
         return
 
-    # Validate predictions and class names
-    if not predictions or len(predictions) != len(class_names):
-        result_label.config(text="Error: Invalid predictions or class names.")
-        return
-
     # Display results
     if class_confidence >= 0.80:
-        if class_index not in descriptions or class_index not in indications:
-            result_label.config(text="Error: Missing description or indication for the predicted class.")
-            return
         result_label.config(text=f"AI Prediction: {class_name}\nConfidence: {class_confidence * 100:.2f}%")
         description_label.config(text=f"\u2022 Description:\n{descriptions[class_index]}", font=("Arial", 12, "bold"))
         indicator_label.config(text=f"\u2022 Weather Indication:\n{indications[class_index]}", font=("Arial", 12, "bold"))
@@ -104,9 +96,6 @@ def classify_image(file_path):
         max_confidence = max(predictions)
         if max_confidence >= 0.50:
             max_class_name = class_names[predictions.index(max_confidence)]
-            if max_class_name not in descriptions or max_class_name not in indications:
-                result_label.config(text="Error: Missing description or indication for the predicted class.")
-                return
             result_label.config(text=f"AI Prediction: {max_class_name}\nConfidence: {max_confidence * 100:.2f}%")
             description_label.config(text=f"\u2022 Description:\n{descriptions[max_class_name]}", font=("Arial", 12, "bold"))
             indicator_label.config(text=f"\u2022 Weather Indication:\n{indications[max_class_name]}", font=("Arial", 12, "bold"))
@@ -146,11 +135,14 @@ def start_camera_feed():
             live_feed_label.imgtk = imgtk
             live_feed_label.configure(image=imgtk)
             live_feed_label.after(10, update_feed)
+        if 'cap' in globals() and cap.isOpened():
+            start_camera_button.config(state=tk.DISABLED)
     
     update_feed()
 
 # Function to capture an image from the camera
 def capture_from_camera():
+    start_camera_button.config(state=tk.NORMAL)
     if cap.isOpened():
         ret, frame = cap.read()
         if ret:
