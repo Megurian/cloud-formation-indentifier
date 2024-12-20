@@ -4,6 +4,13 @@ from PIL import Image, ImageTk
 from PIL import UnidentifiedImageError
 from teachable_machine import TeachableMachine
 import cv2 as cv
+import numpy as np
+
+
+#Disable AutoGraph Globally
+import tensorflow as tf
+tf.config.experimental_run_functions_eagerly(True)
+
 
 import sys
 import os
@@ -47,7 +54,8 @@ def load_weather_indications(file_path):
 # Initialize the model
 model = TeachableMachine(
     model_path=resource_path("keras_model.h5"),
-    labels_file_path=resource_path("labels.txt")
+    labels_file_path=resource_path("labels.txt"),
+    model_type="h5"
 )
 
 # Load data from files
@@ -81,9 +89,11 @@ def classify_image(file_path):
         result = model.classify_image(file_path)
         class_index = result["class_index"]
         class_name = result["class_name"]
+        highest_class_name = result["highest_class_name"]
         class_confidence = result["class_confidence"]
         predictions = result["predictions"]
     except Exception as e:
+        logging.error(f"Error during model classification: {str(e)}")
         result_label.config(text=f"Error during classification: {str(e)}")
         return
 
@@ -94,11 +104,14 @@ def classify_image(file_path):
         indicator_label.config(text=f"\u2022 Weather Indication:\n{indications[class_index]}", font=("Arial", 12, "bold"))
     else:
         max_confidence = max(predictions)
+        max_index = np.argmax(predictions)  # Corrected this line
         if max_confidence >= 0.50:
-            max_class_name = class_names[predictions.index(max_confidence)]
+            max_class_name = class_names[max_index]
+            print(max_index)
+            print(max_class_name)
             result_label.config(text=f"AI Prediction: {max_class_name}\nConfidence: {max_confidence * 100:.2f}%")
-            description_label.config(text=f"\u2022 Description:\n{descriptions[max_class_name]}", font=("Arial", 12, "bold"))
-            indicator_label.config(text=f"\u2022 Weather Indication:\n{indications[max_class_name]}", font=("Arial", 12, "bold"))
+            description_label.config(text=f"\u2022 Description:\n{descriptions[max_index]}", font=("Arial", 12, "bold"))
+            indicator_label.config(text=f"\u2022 Weather Indication:\n{indications[max_index]}", font=("Arial", 12, "bold"))
         else:
             clear_results()
             result_label.config(text="Prediction confidence is too low.\n\nTry uploading/capturing different picture")
